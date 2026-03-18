@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from .models import Inquiry
 from .forms import InquiryForm
-from .utils import send_email_to_client, send_email_to_customer, send_whatsapp_message, update_excel_sheet
+from .utils import send_email_to_client, send_email_to_customer, update_excel_sheet
 import json
 
 def contact_view(request):
