@@ -43,50 +43,65 @@ def inquiry_success(request, inquiry_id):
     except Inquiry.DoesNotExist:
         return redirect('contact')
 
+def _add_cors_headers(response):
+    """Add CORS headers to any response."""
+    response['Access-Control-Allow-Origin'] = 'https://grovixstudio-dusky.vercel.app'
+    response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+    response['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
+
 @csrf_exempt
 def api_submit_inquiry(request):
     """API endpoint for AJAX form submission"""
     # Handle CORS preflight
     if request.method == 'OPTIONS':
         response = JsonResponse({})
-        response['Access-Control-Allow-Origin'] = 'https://grovixstudio-dusky.vercel.app'
-        response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
-        response['Access-Control-Allow-Headers'] = 'Content-Type'
         response['Access-Control-Max-Age'] = '86400'
-        return response
+        return _add_cors_headers(response)
 
-    if request.method == 'POST':
+    if request.method != 'POST':
+        return _add_cors_headers(
+            JsonResponse({'error': 'Invalid request method'}, status=405)
+        )
+
+    # Wrap EVERYTHING in try/except to guarantee CORS headers on errors
+    try:
+        data = json.loads(request.body)
+        
+        inquiry = Inquiry.objects.create(
+            name=data.get('name', ''),
+            email=data.get('email', ''),
+            phone=data.get('phone', ''),
+            company=data.get('company', ''),
+            selected_plan=data.get('selected_plan', ''),
+            message=data.get('message', '')
+        )
+        
+        # Send notifications - these should NEVER crash the request
         try:
-            data = json.loads(request.body)
-            
-            inquiry = Inquiry.objects.create(
-                name=data.get('name'),
-                email=data.get('email'),
-                phone=data.get('phone'),
-                company=data.get('company', ''),
-                selected_plan=data.get('selected_plan'),
-                message=data.get('message', '')
-            )
-            
-            # Send notifications
             send_email_to_client(inquiry)
-            send_email_to_customer(inquiry)
-            update_excel_sheet(inquiry)
-            
-            response = JsonResponse({
-                'success': True,
-                'inquiry_id': inquiry.inquiry_id,
-                'message': 'Inquiry submitted successfully!'
-            })
         except Exception as e:
-            response = JsonResponse({
-                'success': False,
-                'error': str(e)
-            }, status=400)
-    else:
-        response = JsonResponse({'error': 'Invalid request method'}, status=405)
-    
-    response['Access-Control-Allow-Origin'] = 'https://grovixstudio-dusky.vercel.app'
-    response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
-    response['Access-Control-Allow-Headers'] = 'Content-Type'
-    return response
+            print(f"Email to client failed: {e}")
+        
+        try:
+            send_email_to_customer(inquiry)
+        except Exception as e:
+            print(f"Email to customer failed: {e}")
+        
+        try:
+            update_excel_sheet(inquiry)
+        except Exception as e:
+            print(f"Excel update failed: {e}")
+        
+        return _add_cors_headers(JsonResponse({
+            'success': True,
+            'inquiry_id': inquiry.inquiry_id,
+            'message': 'Inquiry submitted successfully!'
+        }))
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return _add_cors_headers(JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400))
