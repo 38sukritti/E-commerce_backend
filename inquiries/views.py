@@ -46,6 +46,15 @@ def inquiry_success(request, inquiry_id):
 @csrf_exempt
 def api_submit_inquiry(request):
     """API endpoint for AJAX form submission"""
+    # Handle CORS preflight
+    if request.method == 'OPTIONS':
+        response = JsonResponse({})
+        response['Access-Control-Allow-Origin'] = 'https://grovixstudio-dusky.vercel.app'
+        response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        response['Access-Control-Allow-Headers'] = 'Content-Type'
+        response['Access-Control-Max-Age'] = '86400'
+        return response
+
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -64,15 +73,20 @@ def api_submit_inquiry(request):
             send_email_to_customer(inquiry)
             update_excel_sheet(inquiry)
             
-            return JsonResponse({
+            response = JsonResponse({
                 'success': True,
                 'inquiry_id': inquiry.inquiry_id,
                 'message': 'Inquiry submitted successfully!'
             })
         except Exception as e:
-            return JsonResponse({
+            response = JsonResponse({
                 'success': False,
                 'error': str(e)
             }, status=400)
+    else:
+        response = JsonResponse({'error': 'Invalid request method'}, status=405)
     
-    return JsonResponse({'error': 'Invalid request method'}, status=405)
+    response['Access-Control-Allow-Origin'] = 'https://grovixstudio-dusky.vercel.app'
+    response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+    response['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
