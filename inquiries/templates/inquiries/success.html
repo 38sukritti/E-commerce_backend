@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Success - Grovix Studio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            text-align: center;
+        }
+
+        .success-icon {
+            font-size: 5rem;
+            margin-bottom: 30px;
+            animation: bounce 1s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        h1 {
+            font-size: 3rem;
+            background: linear-gradient(135deg, #00d9ff, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+        }
+
+        .success-card {
+            background: rgba(20, 20, 30, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 217, 255, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .inquiry-id {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00d9ff, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 20px 0;
+        }
+
+        .info-box {
+            background: rgba(0, 217, 255, 0.1);
+            border: 1px solid #00d9ff;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .info-box h3 {
+            color: #00d9ff;
+            margin-bottom: 15px;
+        }
+
+        .info-box p {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 60px;
+            padding: 0 40px;
+            background: linear-gradient(135deg, #00d9ff, #a855f7);
+            color: #000;
+            text-decoration: none;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 50px rgba(0, 217, 255, 0.5);
+        }
+
+        .btn-secondary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 60px;
+            padding: 0 40px;
+            background: transparent;
+            color: #fff;
+            text-decoration: none;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #00d9ff;
+            transform: translateY(-3px);
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .contact-info {
+            margin-top: 40px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .contact-info a {
+            color: #00d9ff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">🎉</div>
+        
+        <h1>Thank You!</h1>
+        <p class="subtitle">Your inquiry has been successfully submitted</p>
+
+        <div class="success-card">
+            <h2>Your Inquiry ID</h2>
+            <div class="inquiry-id">{{ inquiry.inquiry_id }}</div>
+            <p style="color: rgba(255, 255, 255, 0.7);">Please save this ID for future reference</p>
+
+            <div class="info-box">
+                <h3>📧 What Happens Next?</h3>
+                <p>✅ We've received your inquiry for <strong>{{ inquiry.selected_plan }}</strong></p>
+                <p>✅ A confirmation has been sent to <strong>{{ inquiry.email }}</strong></p>
+                <p>✅ Our team will review your requirements</p>
+                <p>✅ We'll contact you within 24 hours</p>
+            </div>
+
+            <div class="info-box">
+                <h3>📞 Need Immediate Assistance?</h3>
+                <p><strong>Phone:</strong> +91 70090 66489</p>
+                <p><strong>Email:</strong> grovixstudios.official@gmail.com</p>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <a href="http://localhost:5173/home.html" class="btn-primary">BACK TO HOME</a>
+            <a href="http://localhost:5173/pricing.html" class="btn-secondary">VIEW PRICING</a>
+        </div>
+
+        <div class="contact-info">
+            <p>Questions? Contact us at <a href="mailto:grovixstudios.official@gmail.com">grovixstudios.official@gmail.com</a></p>
+        </div>
+    </div>
+</body>
+</html>

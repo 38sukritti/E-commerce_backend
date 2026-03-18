@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Grovix Studio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+
+        .logo span {
+            color: #00d9ff;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #00d9ff, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1rem;
+        }
+
+        .form-container {
+            background: rgba(20, 20, 30, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 217, 255, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #00d9ff;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(40, 40, 50, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.9);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #00d9ff;
+            background: rgba(40, 40, 50, 0.8);
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 18px 40px;
+            background: linear-gradient(135deg, #00d9ff, #a855f7);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 50px rgba(0, 217, 255, 0.5);
+        }
+
+        .messages {
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .alert-success {
+            background: rgba(39, 201, 63, 0.2);
+            border: 1px solid #27c93f;
+            color: #27c93f;
+        }
+
+        .alert-error {
+            background: rgba(255, 95, 86, 0.2);
+            border: 1px solid #ff5f56;
+            color: #ff5f56;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #00d9ff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: #a855f7;
+        }
+
+        .selected-plan {
+            background: rgba(0, 217, 255, 0.1);
+            border: 1px solid #00d9ff;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .selected-plan strong {
+            color: #00d9ff;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">GROVIX <span>STUDIO</span></div>
+            <h1>Get In Touch</h1>
+            <p class="subtitle">Fill out the form and we'll get back to you within 24 hours</p>
+        </div>
+
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-container">
+            {% if selected_plan %}
+            <div class="selected-plan">
+                <strong>Selected Plan:</strong> {{ selected_plan }}
+            </div>
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="{{ form.name.id_for_label }}">Full Name *</label>
+                    {{ form.name }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}">Email Address *</label>
+                    {{ form.email }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.phone.id_for_label }}">Phone Number *</label>
+                    {{ form.phone }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.company.id_for_label }}">Company Name (Optional)</label>
+                    {{ form.company }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.selected_plan.id_for_label }}">Select Plan *</label>
+                    {{ form.selected_plan }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.message.id_for_label }}">Your Message (Optional)</label>
+                    {{ form.message }}
+                </div>
+
+                <button type="submit" class="btn-submit">SUBMIT INQUIRY</button>
+            </form>
+
+            <a href="http://localhost:5173/pricing.html" class="back-link">← Back to Pricing</a>
+        </div>
+    </div>
+</body>
+</html>
