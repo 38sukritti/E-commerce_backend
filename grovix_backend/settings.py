@@ -132,9 +132,10 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# CORS Settings - allow all origins for now
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
+# CORS Settings
+CORS_ALLOWED_ORIGINS = [
+    "https://grovixstudio-dusky.vercel.app",
+]
 # Email Configuration (SMTP)
 # These are configurable via .env so you can switch providers without code changes.
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
