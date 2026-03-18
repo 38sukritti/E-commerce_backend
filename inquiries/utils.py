@@ -49,7 +49,7 @@ def send_email_to_client(inquiry):
         part = MIMEText(html, "html")
         message.attach(part)
         
-        with smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT) as server:
+        with smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT, timeout=10) as server:
             server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
             server.sendmail(settings.EMAIL_HOST_USER, settings.CLIENT_EMAIL, message.as_string())
         
@@ -110,7 +110,7 @@ def send_email_to_customer(inquiry):
         part = MIMEText(html, "html")
         message.attach(part)
 
-        with smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT) as server:
+        with smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT, timeout=10) as server:
             server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
             server.sendmail(settings.EMAIL_HOST_USER, inquiry.email, message.as_string())
 

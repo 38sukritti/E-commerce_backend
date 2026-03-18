@@ -6,6 +6,7 @@ from .models import Inquiry
 from .forms import InquiryForm
 from .utils import send_email_to_client, send_email_to_customer, update_excel_sheet
 import json
+import threading
 
 def contact_view(request):
     """Handle contact form submission"""
@@ -50,6 +51,32 @@ def _add_cors_headers(response):
     response['Access-Control-Allow-Headers'] = 'Content-Type'
     return response
 
+def _send_notifications_background(inquiry_id):
+    """Send all notifications in a background thread so the API response is instant."""
+    try:
+        inquiry = Inquiry.objects.get(id=inquiry_id)
+    except Inquiry.DoesNotExist:
+        print(f"Background notification: inquiry {inquiry_id} not found")
+        return
+
+    try:
+        send_email_to_client(inquiry)
+        print(f"Email to client sent for {inquiry.inquiry_id}")
+    except Exception as e:
+        print(f"Email to client failed: {e}")
+
+    try:
+        send_email_to_customer(inquiry)
+        print(f"Email to customer sent for {inquiry.inquiry_id}")
+    except Exception as e:
+        print(f"Email to customer failed: {e}")
+
+    try:
+        update_excel_sheet(inquiry)
+        print(f"Excel updated for {inquiry.inquiry_id}")
+    except Exception as e:
+        print(f"Excel update failed: {e}")
+
 @csrf_exempt
 def api_submit_inquiry(request):
     """API endpoint for AJAX form submission"""
@@ -77,21 +104,13 @@ def api_submit_inquiry(request):
             message=data.get('message', '')
         )
         
-        # Send notifications - these should NEVER crash the request
-        try:
-            send_email_to_client(inquiry)
-        except Exception as e:
-            print(f"Email to client failed: {e}")
-        
-        try:
-            send_email_to_customer(inquiry)
-        except Exception as e:
-            print(f"Email to customer failed: {e}")
-        
-        try:
-            update_excel_sheet(inquiry)
-        except Exception as e:
-            print(f"Excel update failed: {e}")
+        # Send notifications in background thread - response returns instantly
+        thread = threading.Thread(
+            target=_send_notifications_background,
+            args=(inquiry.id,),
+            daemon=True
+        )
+        thread.start()
         
         return _add_cors_headers(JsonResponse({
             'success': True,
