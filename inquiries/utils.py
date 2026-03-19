@@ -1,21 +1,56 @@
 import os
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests
 from twilio.rest import Client
 from openpyxl import Workbook, load_workbook
 from datetime import datetime
 from django.conf import settings
 
+
+def _send_via_resend(to_email, subject, html_content, reply_to=None):
+    """Send an email using the Resend HTTP API.
+
+    This replaces smtplib which is blocked on Render's free tier.
+    Resend uses HTTPS so it works on any hosting platform.
+    """
+    api_key = getattr(settings, 'RESEND_API_KEY', None)
+    if not api_key:
+        print("RESEND_API_KEY not configured — skipping email")
+        return False
+
+    # Use verified domain sender, or fallback to Resend's onboarding address
+    from_email = getattr(settings, 'RESEND_FROM_EMAIL', 'Grovix Studio <onboarding@resend.dev>')
+
+    payload = {
+        "from": from_email,
+        "to": [to_email],
+        "subject": subject,
+        "html": html_content,
+    }
+    if reply_to:
+        payload["reply_to"] = reply_to
+
+    response = requests.post(
+        "https://api.resend.com/emails",
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        json=payload,
+        timeout=10,
+    )
+
+    if response.status_code == 200:
+        print(f"Email sent to {to_email}: {response.json()}")
+        return True
+    else:
+        print(f"Resend error ({response.status_code}): {response.text}")
+        return False
+
+
 def send_email_to_client(inquiry):
     """Send email notification to client about new inquiry"""
     try:
-        message = MIMEMultipart("alternative")
-        message["Subject"] = f"New Inquiry - {inquiry.inquiry_id} - {inquiry.selected_plan}"
-        message["From"] = settings.EMAIL_HOST_USER
-        message["To"] = settings.CLIENT_EMAIL
-        message["Reply-To"] = inquiry.email
-        
+        subject = f"New Inquiry - {inquiry.inquiry_id} - {inquiry.selected_plan}"
         html = f"""
         <html>
           <body style="font-family: Arial, sans-serif; background-color: #0a0a0f; color: #ffffff; padding: 20px;">
@@ -33,10 +68,10 @@ def send_email_to_client(inquiry):
                 <p><strong style="color: #00d9ff;">Date:</strong> {inquiry.created_at.strftime('%B %d, %Y at %I:%M %p')}</p>
               </div>
               
-              {f'''<div style="background: rgba(20, 20, 30, 0.8); padding: 25px; border-radius: 15px; margin-bottom: 20px;">
+              {f"""<div style="background: rgba(20, 20, 30, 0.8); padding: 25px; border-radius: 15px; margin-bottom: 20px;">
                 <h3 style="color: #a855f7; margin-bottom: 15px;">Message</h3>
                 <p style="line-height: 1.6;">{inquiry.message}</p>
-              </div>''' if inquiry.message else ''}
+              </div>""" if inquiry.message else ''}
               
               <div style="text-align: center; margin-top: 30px;">
                 <p style="color: rgba(255, 255, 255, 0.7);">Contact the customer as soon as possible!</p>
@@ -45,16 +80,13 @@ def send_email_to_client(inquiry):
           </body>
         </html>
         """
-        
-        part = MIMEText(html, "html")
-        message.attach(part)
-        
-        with smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT, timeout=10) as server:
-            server.starttls()
-            server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
-            server.sendmail(settings.EMAIL_HOST_USER, settings.CLIENT_EMAIL, message.as_string())
-        
-        return True
+
+        return _send_via_resend(
+            to_email=settings.CLIENT_EMAIL,
+            subject=subject,
+            html_content=html,
+            reply_to=inquiry.email,
+        )
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -68,12 +100,7 @@ def send_email_to_customer(inquiry):
         return False
 
     try:
-        message = MIMEMultipart("alternative")
-        message["Subject"] = f"Thank you for your inquiry — {inquiry.selected_plan}"
-        message["From"] = settings.EMAIL_HOST_USER
-        message["To"] = inquiry.email
-        message["Reply-To"] = settings.CLIENT_EMAIL
-
+        subject = f"Thank you for your inquiry — {inquiry.selected_plan}"
         html = f"""
         <html>
           <body style="font-family: Arial, sans-serif; background-color: #0a0a0f; color: #ffffff; padding: 20px;">
@@ -93,10 +120,10 @@ def send_email_to_customer(inquiry):
                 </ul>
               </div>
 
-              {f'''<div style="background: rgba(20, 20, 30, 0.8); padding: 25px; border-radius: 15px; margin-bottom: 20px;">
+              {f"""<div style="background: rgba(20, 20, 30, 0.8); padding: 25px; border-radius: 15px; margin-bottom: 20px;">
                 <h3 style="color: #a855f7; margin-bottom: 15px;">Your message</h3>
                 <p style="line-height: 1.6;">{inquiry.message}</p>
-              </div>''' if inquiry.message else ''}
+              </div>""" if inquiry.message else ''}
 
               <div style="text-align: center; margin-top: 30px;">
                 <p style="color: rgba(255, 255, 255, 0.7);">If you need to update your inquiry, just reply to this email.</p>
@@ -108,15 +135,12 @@ def send_email_to_customer(inquiry):
         </html>
         """
 
-        part = MIMEText(html, "html")
-        message.attach(part)
-
-        with smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT, timeout=10) as server:
-            server.starttls()
-            server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
-            server.sendmail(settings.EMAIL_HOST_USER, inquiry.email, message.as_string())
-
-        return True
+        return _send_via_resend(
+            to_email=inquiry.email,
+            subject=subject,
+            html_content=html,
+            reply_to=settings.CLIENT_EMAIL,
+        )
     except Exception as e:
         import traceback
         traceback.print_exc()
