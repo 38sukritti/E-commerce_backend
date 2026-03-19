@@ -1,5 +1,6 @@
 import os
 import requests
+import json
 from twilio.rest import Client
 from openpyxl import Workbook, load_workbook
 from datetime import datetime
@@ -7,45 +8,44 @@ from django.conf import settings
 
 
 def _send_email(to_email, subject, html_content, reply_to=None):
-    """Send an email using the Brevo (Sendinblue) HTTP API.
+    """Send an email using the Google Apps Script Proxy.
 
-    Brevo allows Single Sender Verification (just verify your Gmail)
-    and can send to ANY recipient — no domain verification needed.
+    This bypasses Render's SMTP block and 3rd party API restrictions.
+    It uses the user's own Gmail account via a simple HTTP POST.
     """
-    api_key = getattr(settings, 'BREVO_API_KEY', None)
-    if not api_key:
-        print("BREVO_API_KEY not configured — skipping email")
+    script_url = getattr(settings, 'GOOGLE_SCRIPT_URL', None)
+    if not script_url:
+        print("GOOGLE_SCRIPT_URL not configured — skipping email")
         return False
 
-    from_email = getattr(settings, 'EMAIL_FROM', 'sukritti5106@gmail.com')
-    from_name = getattr(settings, 'EMAIL_FROM_NAME', 'Grovix Studio')
-
     payload = {
-        "sender": {"name": from_name, "email": from_email},
-        "to": [{"email": to_email}],
+        "to": to_email,
         "subject": subject,
-        "htmlContent": html_content
+        "html": html_content,
+        "replyTo": reply_to
     }
-    
-    if reply_to:
-        payload["replyTo"] = {"email": reply_to}
 
-    response = requests.post(
-        "https://api.brevo.com/v3/smtp/email",
-        headers={
-            "accept": "application/json",
-            "api-key": api_key,
-            "content-type": "application/json",
-        },
-        json=payload,
-        timeout=10,
-    )
+    try:
+        response = requests.post(
+            script_url,
+            data=json.dumps(payload),
+            headers={"Content-Type": "application/json"},
+            timeout=15
+        )
 
-    if response.status_code in (200, 201, 202):
-        print(f"Email sent to {to_email} via Brevo")
-        return True
-    else:
-        print(f"Brevo error ({response.status_code}): {response.text}")
+        if response.status_code == 200:
+            result = response.json()
+            if result.get("status") == "success":
+                print(f"Email sent to {to_email} via Google Proxy")
+                return True
+            else:
+                print(f"Google Proxy reported error: {result.get('error')}")
+                return False
+        else:
+            print(f"Google Proxy failed with status {response.status_code}: {response.text}")
+            return False
+    except Exception as e:
+        print(f"Error calling Google Proxy: {e}")
         return False
 
 

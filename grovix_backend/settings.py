@@ -137,9 +137,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://grovixstudio-dusky.vercel.app",
 ]
 # Email Configuration (Brevo/Sendinblue HTTP API)
-BREVO_API_KEY = os.getenv('BREVO_API_KEY')
-EMAIL_FROM = os.getenv('EMAIL_FROM', 'sukritti5106@gmail.com')
-EMAIL_FROM_NAME = os.getenv('EMAIL_FROM_NAME', 'Grovix Studio')
+# Email Configuration (Google Script Proxy — reliable for Render free tier)
+GOOGLE_SCRIPT_URL = os.getenv('GOOGLE_SCRIPT_URL', 'https://script.google.com/macros/s/AKfycbwj_bUMKPIF2qMwZhQkdnbvg5hSW1fxpmDtty4BbEPUlbGnD0QaxNa1tPTJ1K_1xiCw/exec')
 CLIENT_EMAIL = os.getenv('CLIENT_EMAIL', 'sukritti3406.beai24@chitkara.edu.in')
 
 # Twilio Configuration
