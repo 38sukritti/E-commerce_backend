@@ -139,7 +139,7 @@ CORS_ALLOWED_ORIGINS = [
 # Email Configuration (Brevo/Sendinblue HTTP API)
 # Email Configuration (Google Script Proxy — reliable for Render free tier)
 GOOGLE_SCRIPT_URL = os.getenv('GOOGLE_SCRIPT_URL', 'https://script.google.com/macros/s/AKfycbwj_bUMKPIF2qMwZhQkdnbvg5hSW1fxpmDtty4BbEPUlbGnD0QaxNa1tPTJ1K_1xiCw/exec')
-CLIENT_EMAIL = os.getenv('CLIENT_EMAIL', 'sukritti3406.beai24@chitkara.edu.in')
+CLIENT_EMAIL = os.getenv('CLIENT_EMAIL', 'grovixstudios.official@gmail.com')
 
 # Twilio Configuration
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
