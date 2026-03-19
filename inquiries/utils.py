@@ -7,53 +7,45 @@ from django.conf import settings
 
 
 def _send_email(to_email, subject, html_content, reply_to=None):
-    """Send an email using the SendGrid HTTP API.
+    """Send an email using the Brevo (Sendinblue) HTTP API.
 
-    SendGrid allows Single Sender Verification (just verify your Gmail)
+    Brevo allows Single Sender Verification (just verify your Gmail)
     and can send to ANY recipient — no domain verification needed.
-    SMTP is blocked on Render's free tier, so we use the HTTP API instead.
     """
-    api_key = getattr(settings, 'SENDGRID_API_KEY', None)
+    api_key = getattr(settings, 'BREVO_API_KEY', None)
     if not api_key:
-        print("SENDGRID_API_KEY not configured — skipping email")
+        print("BREVO_API_KEY not configured — skipping email")
         return False
 
     from_email = getattr(settings, 'EMAIL_FROM', 'sukritti5106@gmail.com')
     from_name = getattr(settings, 'EMAIL_FROM_NAME', 'Grovix Studio')
 
     payload = {
-        "personalizations": [{
-            "to": [{"email": to_email}],
-        }],
-        "from": {
-            "email": from_email,
-            "name": from_name,
-        },
+        "sender": {"name": from_name, "email": from_email},
+        "to": [{"email": to_email}],
         "subject": subject,
-        "content": [{
-            "type": "text/html",
-            "value": html_content,
-        }],
+        "htmlContent": html_content
     }
+    
     if reply_to:
-        payload["reply_to"] = {"email": reply_to}
+        payload["replyTo"] = {"email": reply_to}
 
     response = requests.post(
-        "https://api.sendgrid.com/v3/mail/send",
+        "https://api.brevo.com/v3/smtp/email",
         headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
+            "accept": "application/json",
+            "api-key": api_key,
+            "content-type": "application/json",
         },
         json=payload,
         timeout=10,
     )
 
-    # SendGrid returns 202 Accepted on success (no body)
-    if response.status_code == 202:
-        print(f"Email sent to {to_email} (subject: {subject})")
+    if response.status_code in (200, 201, 202):
+        print(f"Email sent to {to_email} via Brevo")
         return True
     else:
-        print(f"SendGrid error ({response.status_code}): {response.text}")
+        print(f"Brevo error ({response.status_code}): {response.text}")
         return False
 
 

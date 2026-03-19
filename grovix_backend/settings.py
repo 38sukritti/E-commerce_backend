@@ -136,8 +136,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     "https://grovixstudio-dusky.vercel.app",
 ]
-# Email Configuration (SendGrid HTTP API — SMTP is blocked on Render free tier)
-SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
+# Email Configuration (Brevo/Sendinblue HTTP API)
+BREVO_API_KEY = os.getenv('BREVO_API_KEY')
 EMAIL_FROM = os.getenv('EMAIL_FROM', 'sukritti5106@gmail.com')
 EMAIL_FROM_NAME = os.getenv('EMAIL_FROM_NAME', 'Grovix Studio')
 CLIENT_EMAIL = os.getenv('CLIENT_EMAIL', 'sukritti3406.beai24@chitkara.edu.in')
