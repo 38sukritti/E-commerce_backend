@@ -6,31 +6,40 @@ from datetime import datetime
 from django.conf import settings
 
 
-def _send_via_resend(to_email, subject, html_content, reply_to=None):
-    """Send an email using the Resend HTTP API.
+def _send_email(to_email, subject, html_content, reply_to=None):
+    """Send an email using the SendGrid HTTP API.
 
-    This replaces smtplib which is blocked on Render's free tier.
-    Resend uses HTTPS so it works on any hosting platform.
+    SendGrid allows Single Sender Verification (just verify your Gmail)
+    and can send to ANY recipient — no domain verification needed.
+    SMTP is blocked on Render's free tier, so we use the HTTP API instead.
     """
-    api_key = getattr(settings, 'RESEND_API_KEY', None)
+    api_key = getattr(settings, 'SENDGRID_API_KEY', None)
     if not api_key:
-        print("RESEND_API_KEY not configured — skipping email")
+        print("SENDGRID_API_KEY not configured — skipping email")
         return False
 
-    # Use verified domain sender, or fallback to Resend's onboarding address
-    from_email = getattr(settings, 'RESEND_FROM_EMAIL', 'Grovix Studio <onboarding@resend.dev>')
+    from_email = getattr(settings, 'EMAIL_FROM', 'sukritti5106@gmail.com')
+    from_name = getattr(settings, 'EMAIL_FROM_NAME', 'Grovix Studio')
 
     payload = {
-        "from": from_email,
-        "to": [to_email],
+        "personalizations": [{
+            "to": [{"email": to_email}],
+        }],
+        "from": {
+            "email": from_email,
+            "name": from_name,
+        },
         "subject": subject,
-        "html": html_content,
+        "content": [{
+            "type": "text/html",
+            "value": html_content,
+        }],
     }
     if reply_to:
-        payload["reply_to"] = reply_to
+        payload["reply_to"] = {"email": reply_to}
 
     response = requests.post(
-        "https://api.resend.com/emails",
+        "https://api.sendgrid.com/v3/mail/send",
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
@@ -39,11 +48,12 @@ def _send_via_resend(to_email, subject, html_content, reply_to=None):
         timeout=10,
     )
 
-    if response.status_code == 200:
-        print(f"Email sent to {to_email}: {response.json()}")
+    # SendGrid returns 202 Accepted on success (no body)
+    if response.status_code == 202:
+        print(f"Email sent to {to_email} (subject: {subject})")
         return True
     else:
-        print(f"Resend error ({response.status_code}): {response.text}")
+        print(f"SendGrid error ({response.status_code}): {response.text}")
         return False
 
 
@@ -81,7 +91,7 @@ def send_email_to_client(inquiry):
         </html>
         """
 
-        return _send_via_resend(
+        return _send_email(
             to_email=settings.CLIENT_EMAIL,
             subject=subject,
             html_content=html,
@@ -135,7 +145,7 @@ def send_email_to_customer(inquiry):
         </html>
         """
 
-        return _send_via_resend(
+        return _send_email(
             to_email=inquiry.email,
             subject=subject,
             html_content=html,
